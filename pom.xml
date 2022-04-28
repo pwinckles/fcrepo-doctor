@@ -312,30 +312,5 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <developers>
-        <developer>
-            <id>dbernstein</id>
-            <name>Daniel Bernstein</name>
-            <email>daniel.bernstein @ (domain of organization url)</email>
-            <organization>Lyrasis, Inc.</organization>
-            <organizationUrl>https://www.lyrasis.org/</organizationUrl>
-            <roles>
-                <role>developer</role>
-            </roles>
-            <timezone>-8</timezone>
-        </developer>
-        <developer>
-            <id>awoods</id>
-            <name>Andrew Woods</name>
-            <email>andrew.woods @ (domain of organization url)</email>
-            <organization>Lyrasis, Inc.</organization>
-            <organizationUrl>https://www.lyrasis.org/</organizationUrl>
-            <roles>
-                <role>developer</role>
-            </roles>
-            <timezone>-7</timezone>
-        </developer>
-    </developers>
-
 
 </project>
