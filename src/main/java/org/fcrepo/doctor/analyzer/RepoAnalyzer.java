@@ -7,6 +7,7 @@
 package org.fcrepo.doctor.analyzer;
 
 import edu.wisc.library.ocfl.api.OcflRepository;
+import org.fcrepo.doctor.problem.writer.ProblemWriter;
 import org.fcrepo.doctor.util.Stoppable;
 import org.fcrepo.doctor.util.StoppableThread;
 import org.slf4j.Logger;
@@ -36,11 +37,13 @@ public class RepoAnalyzer {
     /**
      * @param parallelism number of worker threads to use; must be greater than 0
      * @param ocflRepo the OCFL repository to analyze
-     * @param objectAnalyzerFactory factory for creating object analyzers
+     * @param objectAnalyzer analyzer for identifying problems within objects
+     * @param problemWriter writer for recording any problems found
      */
     public RepoAnalyzer(final int parallelism,
                         final OcflRepository ocflRepo,
-                        final ObjectAnalyzerFactory objectAnalyzerFactory) {
+                        final ObjectAnalyzer objectAnalyzer,
+                        final ProblemWriter problemWriter) {
         if (parallelism < 1) {
             throw new IllegalArgumentException("Parallelism must be greater than 0");
         }
@@ -49,7 +52,8 @@ public class RepoAnalyzer {
         this.objectIdQueue = new LinkedBlockingQueue<>();
         this.analyzers = new ArrayList<>(parallelism);
         for (int i = 0; i < parallelism; i++) {
-            analyzers.add(new StoppableThread(objectAnalyzerFactory.newObjectAnalyzer(objectIdQueue),
+            analyzers.add(new StoppableThread(
+                    new ObjectAnalyzerWorker(objectIdQueue, objectAnalyzer, problemWriter),
                     "ObjectAnalyzer-" + i));
         }
     }

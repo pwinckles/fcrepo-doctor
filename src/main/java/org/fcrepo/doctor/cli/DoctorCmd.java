@@ -23,7 +23,7 @@ import edu.wisc.library.ocfl.core.storage.OcflStorage;
 import edu.wisc.library.ocfl.core.storage.OcflStorageBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.fcrepo.doctor.analyzer.ObjectAnalyzerFactory;
+import org.fcrepo.doctor.analyzer.ObjectAnalyzer;
 import org.fcrepo.doctor.analyzer.RepoAnalyzer;
 import org.fcrepo.doctor.analyzer.reader.CachedContentReaderFactory;
 import org.fcrepo.doctor.analyzer.reader.ContentReaderFactory;
@@ -32,6 +32,7 @@ import org.fcrepo.doctor.problem.detector.BinaryDescSubjectProblemDetector;
 import org.fcrepo.doctor.problem.detector.ChainedProblemDetector;
 import org.fcrepo.doctor.problem.writer.FileProblemWriter;
 import org.fcrepo.doctor.problem.writer.ProblemWriter;
+import org.fcrepo.doctor.problem.writer.StatsProblemWriter;
 import org.fcrepo.storage.ocfl.CommitType;
 import org.fcrepo.storage.ocfl.DefaultOcflObjectSessionFactory;
 import org.fcrepo.storage.ocfl.OcflObjectSessionFactory;
@@ -140,10 +141,15 @@ public class DoctorCmd implements Callable<Integer> {
 
             final var ocflRepo = createOcflRepo();
             final var objectSessionFactory = createObjectSessionFactory(ocflRepo);
+            final var problemDetector = new ChainedProblemDetector(List.of(
+                    new BinaryDescSubjectProblemDetector()
+            ));
+            final var objectAnalyzer = new ObjectAnalyzer(objectSessionFactory,
+                    problemDetector,
+                    createContentReaderFactory());
 
             try (final var problemWriter = createProblemWriter()) {
-                final var objectAnalyzerFactory = createObjectAnalyzerFactory(objectSessionFactory, problemWriter);
-                final var repoAnalyzer = new RepoAnalyzer(getParallelism(), ocflRepo, objectAnalyzerFactory);
+                final var repoAnalyzer = new RepoAnalyzer(getParallelism(), ocflRepo, objectAnalyzer, problemWriter);
                 repoAnalyzer.analyze();
             }
         } catch (Exception e) {
@@ -233,21 +239,7 @@ public class DoctorCmd implements Callable<Integer> {
     }
 
     private ProblemWriter createProblemWriter() {
-        final var objectMapper = new ObjectMapper();
-        // TODO will this truncate existing?
-        return new FileProblemWriter(objectMapper, outputDir.resolve(PROBLEMS_OUTPUT));
-    }
-
-    private ObjectAnalyzerFactory createObjectAnalyzerFactory(final OcflObjectSessionFactory objectSessionFactory,
-                                                              final ProblemWriter problemWriter) {
-        final var problemDetector = new ChainedProblemDetector(List.of(
-                new BinaryDescSubjectProblemDetector()
-        ));
-
-        return new ObjectAnalyzerFactory(objectSessionFactory,
-                problemDetector,
-                createContentReaderFactory(),
-                problemWriter);
+        return new StatsProblemWriter(new FileProblemWriter(new ObjectMapper(), outputDir.resolve(PROBLEMS_OUTPUT)));
     }
 
     private ContentReaderFactory createContentReaderFactory() {
