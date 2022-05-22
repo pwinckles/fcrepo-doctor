@@ -36,6 +36,7 @@ public final class ResourceHeadersUtil {
                 .withContentSize(-1L)
                 .withLastModifiedDate(now)
                 .withLastModifiedBy("fedoraAdmin")
+                .withMementoCreatedDate(now)
                 .withStateToken(DigestUtils.md5Hex(String.valueOf(now)).toUpperCase())
                 .build();
     }
